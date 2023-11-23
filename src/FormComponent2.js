@@ -10,6 +10,7 @@ function FormComponent2() {
     Address: '',
     Phone_no: ''
   });
+  const [voiceInput, setVoiceInput] = useState('');
 
   const [currentQuestion, setCurrentQuestion] = useState('Name');
   const [submissionStatus, setSubmissionStatus] = useState(null); // Added state for submission status
@@ -32,10 +33,41 @@ function FormComponent2() {
   const handleNextQuestion = () => {
     const keys = Object.keys(formData);
     const index = keys.indexOf(currentQuestion);
+    formData[currentQuestion]=voiceInput
     if (index !== -1 && index < keys.length - 1) {
       setCurrentQuestion(keys[index + 1]);
+      setVoiceInput('')
       speakQuestion(questions[keys[index + 1]]);
     }
+  };
+const startVoiceRecognition = (e) => {
+  e.preventDefault();
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+    recognition.addEventListener('result', handleVoiceInput);
+    recognition.addEventListener('error', handleVoiceError);
+    recognition.start();
+  };
+  
+const handleVoiceInput = (event) => {
+    const transcript = event.results[0][0].transcript;
+    setVoiceInput(transcript);
+  };
+ 
+  const handleVoiceError = (event) => {
+    console.log('Voice recognition error:', event.error);
+  };
+ 
+ 
+  const stopVoiceRecognition = (e) => {
+    e.preventDefault();
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.stop();
   };
 
   const handleSubmit = async (e) => {
@@ -47,7 +79,7 @@ function FormComponent2() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({form_type:'form1',formData})
+        body: JSON.stringify(formData)
       });
 
       if (response.ok) {
@@ -79,9 +111,9 @@ function FormComponent2() {
     window.speechSynthesis.speak(speech);
   };
 
-  useEffect(() => {
-    speakQuestion(questions[currentQuestion]);
-  }, [currentQuestion]);
+  // useEffect(() => {
+  //   speakQuestion(questions[currentQuestion]);
+  // }, [currentQuestion]);
 
   const getPreview = () => {
     return Object.entries(formData).map(([key, value]) => (
@@ -103,9 +135,13 @@ function FormComponent2() {
           type="text"
           name={currentQuestion}
           placeholder={questions[currentQuestion]}
-          value={formData[currentQuestion]}
-          onChange={handleChange}
+          value={voiceInput}
+          onChange={(e) =>{e.preventDefault();setVoiceInput(e.target.value)} }
         />
+        <div className="voice-recognition">
+          <button onClick={startVoiceRecognition}>Start Voice Recognition</button>
+          <button onClick={stopVoiceRecognition}>Stop Voice Recognition</button>
+        </div>
         <button type="button" onClick={handleNextQuestion}>
           Next
         </button>
