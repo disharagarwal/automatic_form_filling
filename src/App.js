@@ -1,23 +1,25 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import FormComponent from './FormComponent';
+import FormComponent2 from './FormComponent2';
 
 function App() {
+  const [selectedForm, setSelectedForm] = useState(null);
+
+  const handleFormSelection = (e) => {
+    setSelectedForm(e.target.value);
+  };
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <h2>Select a Form to Fill:</h2>
+      <select onChange={handleFormSelection}>
+        <option value="">Select a form</option>
+        <option value="FormComponent">Form Component 1</option>
+        <option value="FormComponent2">Form Component 2</option>
+      </select>
+      
+      {selectedForm === 'FormComponent' && <FormComponent />}
+      {selectedForm === 'FormComponent2' && <FormComponent2 />}
     </div>
   );
 }
