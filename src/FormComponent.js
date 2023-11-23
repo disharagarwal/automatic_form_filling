@@ -3,29 +3,31 @@ import React, { useState, useEffect } from 'react';
 function FormComponent2() {
   const [formData, setFormData] = useState({
     Name: '',
-    USN: '',
+    Usn: '',
     Email: '',
     Gender: '',
     City: '',
     Create_Password: '',
-    Confirm_Password:'',
+    Confirm_Password: '',
+    Address: '',
     Phone_no: '',
-    State:''
+    State: ''
   });
-
+  const [voiceInput, setVoiceInput] = useState('');
   const [currentQuestion, setCurrentQuestion] = useState('Name');
   const [submissionStatus, setSubmissionStatus] = useState(null); // Added state for submission status
 
   const questions = {
     Name: 'Enter your Name',
-    USN: 'Enter your USN',
+    Usn: 'Enter your USN',
     Email: 'Enter your Email',
     Gender: 'Enter your Gender',
     City: 'Enter your City',
-    Create_Password:'Create Password',
-    Confirm_Password:'Confirm Password',
+    Create_Password: 'Create Password',
+    Confirm_Password: 'Confirm Password',
+    Address: 'Enter your Address',
     Phone_no: 'Enter your Phone Number',
-    State:'State'
+    State: 'Enter your State'
   };
 
   const handleChange = (e) => {
@@ -36,22 +38,53 @@ function FormComponent2() {
   const handleNextQuestion = () => {
     const keys = Object.keys(formData);
     const index = keys.indexOf(currentQuestion);
+    formData[currentQuestion]=voiceInput
     if (index !== -1 && index < keys.length - 1) {
       setCurrentQuestion(keys[index + 1]);
+      setVoiceInput('')
       speakQuestion(questions[keys[index + 1]]);
     }
+  };
+const startVoiceRecognition = (e) => {
+  e.preventDefault();
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+    recognition.addEventListener('result', handleVoiceInput);
+    recognition.addEventListener('error', handleVoiceError);
+    recognition.start();
+  };
+  
+const handleVoiceInput = (event) => {
+    const transcript = event.results[0][0].transcript;
+    setVoiceInput(transcript);
+  };
+ 
+  const handleVoiceError = (event) => {
+    console.log('Voice recognition error:', event.error);
+  };
+ 
+ 
+  const stopVoiceRecognition = (e) => {
+    e.preventDefault();
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.stop();
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const response = await fetch('http://localhost:5000/submit_form', {
+      const response = await fetch('http://localhost:5000/submit_form2', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({form_type:'form2',formData})
+        body: JSON.stringify(formData)
       });
 
       if (response.ok) {
@@ -59,14 +92,15 @@ function FormComponent2() {
         setSubmissionStatus('success');
         setFormData({
           Name: '',
-          USN: '',
+          Usn: '',
           Email: '',
           Gender: '',
           City: '',
           Create_Password: '',
-          Confirm_Password:'',
+          Confirm_Password: '',
+          Address: '',
           Phone_no: '',
-          State:''
+          State: ''
         });
         setCurrentQuestion('Name');
         speakQuestion(questions['Name']);
@@ -85,9 +119,9 @@ function FormComponent2() {
     window.speechSynthesis.speak(speech);
   };
 
-  useEffect(() => {
-    speakQuestion(questions[currentQuestion]);
-  }, [currentQuestion]);
+  // useEffect(() => {
+  //   speakQuestion(questions[currentQuestion]);
+  // }, [currentQuestion]);
 
   const getPreview = () => {
     return Object.entries(formData).map(([key, value]) => (
@@ -109,9 +143,13 @@ function FormComponent2() {
           type="text"
           name={currentQuestion}
           placeholder={questions[currentQuestion]}
-          value={formData[currentQuestion]}
-          onChange={handleChange}
+          value={voiceInput}
+          onChange={(e) =>{e.preventDefault();setVoiceInput(e.target.value)} }
         />
+        <div className="voice-recognition">
+          <button onClick={startVoiceRecognition}>Start Voice Recognition</button>
+          <button onClick={stopVoiceRecognition}>Stop Voice Recognition</button>
+        </div>
         <button type="button" onClick={handleNextQuestion}>
           Next
         </button>
